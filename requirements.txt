@@ -1,0 +1,5 @@
+Flask
+python-dotenv
+watchdog
+Flask-JSON
+flask-cors

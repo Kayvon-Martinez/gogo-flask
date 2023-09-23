@@ -19,6 +19,12 @@ def index():
     return json_response(message="Welcome to the Gogo-Flask api")
 
 
+@app.route("/api/home-cats")
+def home_categories():
+    home_cats_data = gogoanime_provider.get_ajax_categories()
+    return json_response(result=home_cats_data)
+
+
 if __name__ == "__main__":
     app.run(host=config["FLASK_SERVER_IP"],
             port=int(config["FLASK_SERVER_PORT"]))

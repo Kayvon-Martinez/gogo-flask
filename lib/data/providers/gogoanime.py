@@ -2,8 +2,9 @@ import requests
 from bs4 import BeautifulSoup
 from typing import Any
 
-from lib.data.models.base_models import CategoryModel, ItemModel
-from lib.utils.values.patterns import style_image_url_pattern
+from lib.data.models.base_models import CategoryModel, DiscreteCategoryModel, EpisodeModel, GenreModel, ItemModel, DetailedItemModel, TypeModel
+from lib.utils.helpers.time_helper import year_string_to_datetime_string
+from lib.utils.values.patterns import style_image_url_pattern, item_id_remove_pattern
 
 
 class GogoanimeProvider:
@@ -65,6 +66,97 @@ class GogoanimeProvider:
             categories.append(
                 self.parse_ajax_category_page(soup, home_cat_path))
         return [category.toJson() for category in categories]
+
+    def parse_item_details_page(self, soup: BeautifulSoup) -> DetailedItemModel:
+        title = soup.select_one("h1").text.strip()
+        image_url = soup.select_one("div.anime_info_body_bg > img")["src"]
+        sub = True if not ("(Dub)") in title else False
+        info_tags = soup.select("p.type")
+        type = None
+        try:
+            type_tag = list(filter(
+                lambda x: "Type:" in x.text.strip(), info_tags))[0]
+            type = TypeModel(
+                id=type_tag.select_one("a")["href"].strip().split("/")[-1],
+                name=type_tag.select_one("a").text.strip()
+            )
+        except Exception as e:
+            print(e)
+            pass
+        synopsis = ""
+        try:
+            synopsis = list(filter(lambda x: "Plot Summary:" in x.text.strip(), info_tags))[
+                0].text.replace("Plot Summary:", "").strip().replace("\n", "").replace("\r", "").replace("\t", "")
+        except Exception:
+            pass
+        genres = []
+        try:
+            for genre in list(filter(lambda x: "Genre:" in x.text.strip(), info_tags))[0].select("a"):
+                print(genre)
+                genres.append(GenreModel(
+                    id=genre["href"].strip().split("/")[-1],
+                    name=genre.text.strip()
+                ))
+        except Exception:
+            pass
+        released = ""
+        try:
+            released = year_string_to_datetime_string(list(filter(
+                lambda x: "Released:" in x.text.strip(), info_tags))[0].text.replace("Released:", "").strip())
+        except Exception:
+            pass
+        status = None
+        try:
+            status_tag = list(filter(lambda x: "Status:" in x.text.strip(), info_tags))[
+                0].select_one("a")
+            status = DiscreteCategoryModel(
+                id=status_tag["href"].strip().split("/")[-1],
+                title=status_tag.text.strip()
+            )
+        except Exception:
+            pass
+        other_names = []
+        try:
+            other_names = list(map(lambda x: x.strip(), list(filter(lambda x: "Other name:" in x.text.strip(), info_tags))[
+                0].text.replace("Other name:", "").strip().split("/")))
+        except Exception:
+            pass
+        episodes = []
+        episodes_response = requests.get(
+            f"{GogoanimeProvider.ajax_url}/load-list-episode?ep_start=0&ep_end=999999&&id={soup.select_one('input#movie_id')['value']}&default_ep=0&alias={soup.select_one('input#alias_anime')['value']}")
+        episodes_soup = BeautifulSoup(
+            episodes_response.text, features="html.parser")
+        for episode in episodes_soup.select("li > a"):
+            episodes.append(EpisodeModel(
+                id=episode["href"].strip().split("/")[-1],
+                number=int(episode.select_one(
+                    "div.name").text.strip().replace("EP", "").strip()),
+                sub=episode.select_one("div.cate").text.strip() == "SUB",
+            ))
+        num_of_eps = len(episodes)
+        detailed_item = DetailedItemModel(
+            id=soup.select_one("input#movie_id")["value"],
+            title=title,
+            imageUrl=image_url,
+            sub=sub,
+            numOfEps=num_of_eps,
+            type=type,
+            synopsis=synopsis,
+            genres=genres,
+            released=released,
+            status=status,
+            otherNames=other_names,
+            episodes=episodes
+        )
+        return detailed_item
+
+    def get_item_details(self, id: str) -> dict[str, Any]:
+        new_id = item_id_remove_pattern.sub("", id)
+        response = requests.get(
+            f"{GogoanimeProvider.base_url}/category/{new_id}")
+        soup = BeautifulSoup(response.text, features="html.parser")
+        item_details = self.parse_item_details_page(soup)
+        return item_details.toJson()
 
     @staticmethod
     def check_url_for_redirect(url: str) -> str:

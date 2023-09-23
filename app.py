@@ -1,7 +1,7 @@
 from dotenv import dotenv_values
 from flask import Flask
 from flask_cors import CORS
-from flask_json import FlaskJSON, JsonError, as_json, json_response
+from flask_json import FlaskJSON, JsonError, json_response
 
 from lib.data.providers.gogoanime import GogoanimeProvider
 
@@ -23,6 +23,12 @@ def index():
 def home_categories():
     home_cats_data = gogoanime_provider.get_ajax_categories()
     return json_response(result=home_cats_data)
+
+
+@app.route("/api/details/<string:item_id>")
+def item_details(item_id: str):
+    item_details_data = gogoanime_provider.get_item_details(item_id)
+    return json_response(result=item_details_data)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ package app.kyushu.aynime.screens.home.view
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -35,6 +36,7 @@ object HomeScreen : AndroidScreen() {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
+                .padding(8.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
             if (viewModel.homeCats.value == null) {

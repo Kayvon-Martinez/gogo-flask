@@ -31,6 +31,12 @@ def item_details(item_id: str):
     return json_response(result=item_details_data)
 
 
+@app.route("/api/search/<string:query>")
+def search(query: str):
+    search_data = gogoanime_provider.get_search_results(query)
+    return json_response(result=search_data)
+
+
 if __name__ == "__main__":
     app.run(host=config["FLASK_SERVER_IP"],
             port=int(config["FLASK_SERVER_PORT"]))

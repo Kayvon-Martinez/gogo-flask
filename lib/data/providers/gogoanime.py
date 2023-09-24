@@ -23,7 +23,7 @@ class GogoanimeProvider:
         GogoanimeProvider.ajax_url = GogoanimeProvider.check_url_for_redirect(
             GogoanimeProvider.ajax_url)
 
-    def parse_ajax_category_page(self, soup: BeautifulSoup, path: str) -> CategoryModel:
+    def __parse_ajax_category_page(self, soup: BeautifulSoup, path: str) -> CategoryModel:
         if path.endswith("ongoing.html?page=1"):
             category_name = "Ongoing"
         elif path.endswith("1"):
@@ -64,10 +64,10 @@ class GogoanimeProvider:
                 f"{GogoanimeProvider.ajax_url}/{home_cat_path}")
             soup = BeautifulSoup(response.text, features="html.parser")
             categories.append(
-                self.parse_ajax_category_page(soup, home_cat_path))
+                self.__parse_ajax_category_page(soup, home_cat_path))
         return [category.toJson() for category in categories]
 
-    def parse_item_details_page(self, soup: BeautifulSoup) -> DetailedItemModel:
+    def __parse_item_details_page(self, soup: BeautifulSoup) -> DetailedItemModel:
         title = soup.select_one("h1").text.strip()
         image_url = soup.select_one("div.anime_info_body_bg > img")["src"]
         sub = True if not ("(Dub)") in title else False
@@ -81,7 +81,6 @@ class GogoanimeProvider:
                 name=type_tag.select_one("a").text.strip()
             )
         except Exception as e:
-            print(e)
             pass
         synopsis = ""
         try:
@@ -92,7 +91,6 @@ class GogoanimeProvider:
         genres = []
         try:
             for genre in list(filter(lambda x: "Genre:" in x.text.strip(), info_tags))[0].select("a"):
-                print(genre)
                 genres.append(GenreModel(
                     id=genre["href"].strip().split("/")[-1],
                     name=genre.text.strip()
@@ -155,8 +153,30 @@ class GogoanimeProvider:
         response = requests.get(
             f"{GogoanimeProvider.base_url}/category/{new_id}")
         soup = BeautifulSoup(response.text, features="html.parser")
-        item_details = self.parse_item_details_page(soup)
+        item_details = self.__parse_item_details_page(soup)
         return item_details.toJson()
+
+    def __parse_search_results_page(self, soup: BeautifulSoup) -> list[ItemModel]:
+        items = []
+        for item in soup.select("ul.items > li"):
+            item_id = item.select_one("a")["href"].strip().split("/")[-1]
+            item_title = item.select_one("a")["title"].strip()
+            item_image_url = item.select_one("a > img")["src"]
+            item_sub = False if ("(Dub)") in item_title else True
+            items.append(ItemModel(
+                id=item_id,
+                title=item_title,
+                imageUrl=item_image_url,
+                sub=item_sub,
+            ))
+        return items
+
+    def get_search_results(self, query: str) -> list[dict[str, Any]]:
+        response = requests.get(
+            f"{GogoanimeProvider.base_url}/search.html?keyword={query}")
+        soup = BeautifulSoup(response.text, features="html.parser")
+        search_results = self.__parse_search_results_page(soup)
+        return [search_result.toJson() for search_result in search_results]
 
     @staticmethod
     def check_url_for_redirect(url: str) -> str:

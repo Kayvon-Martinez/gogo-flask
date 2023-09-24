@@ -37,6 +37,13 @@ def search(query: str):
     return json_response(result=search_data)
 
 
+@app.route("/api/raw-video-source/<string:episode_id>")
+def raw_video_source(episode_id: str):
+    raw_video_source_data = gogoanime_provider.get_episode_embed_links(
+        episode_id)
+    return json_response(result=raw_video_source_data)
+
+
 if __name__ == "__main__":
     app.run(host=config["FLASK_SERVER_IP"],
             port=int(config["FLASK_SERVER_PORT"]))

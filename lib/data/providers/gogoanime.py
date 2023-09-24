@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from typing import Any
 
-from lib.data.models.base_models import CategoryModel, DiscreteCategoryModel, EpisodeModel, GenreModel, ItemModel, DetailedItemModel, TypeModel
+from lib.data.models.base_models import CategoryModel, DiscreteCategoryModel, EpisodeModel, GenreModel, ItemModel, DetailedItemModel, RawVideoSourceModel, TypeModel
 from lib.utils.helpers.time_helper import year_string_to_datetime_string
 from lib.utils.values.patterns import style_image_url_pattern, item_id_remove_pattern
 
@@ -177,6 +177,26 @@ class GogoanimeProvider:
         soup = BeautifulSoup(response.text, features="html.parser")
         search_results = self.__parse_search_results_page(soup)
         return [search_result.toJson() for search_result in search_results]
+
+    def get_episode_embed_links(self, episode_id: str) -> list[dict[str, Any]]:
+        response = requests.get(
+            f"{GogoanimeProvider.base_url}/{episode_id}")
+        soup = BeautifulSoup(response.text, features="html.parser")
+        embed_links = []
+        for embed_link in soup.select("div.anime_muti_link > ul > li > a"):
+            id = embed_link.text.strip().replace("Choose this server", "").strip()
+            if id == "Vidstreaming":
+                id = "goload"
+                title = "Goload"
+            else:
+                title = id
+                id = id.replace(" ", "-").lower()
+            embed_links.append(RawVideoSourceModel(
+                id=id,
+                title=title,
+                url=embed_link["data-video"],
+            ).toJson())
+        return embed_links
 
     @staticmethod
     def check_url_for_redirect(url: str) -> str:

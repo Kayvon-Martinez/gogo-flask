@@ -18,11 +18,14 @@ import app.kyushu.aynime.screens.home.composables.CategorySwiper
 import app.kyushu.aynime.screens.home.view_model.HomeScreenViewModel
 import cafe.adriel.voyager.androidx.AndroidScreen
 import cafe.adriel.voyager.hilt.getViewModel
+import cafe.adriel.voyager.navigator.LocalNavigator
 import timber.log.Timber
 
 object HomeScreen : AndroidScreen() {
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.current!!
+
         val viewModel = getViewModel<HomeScreenViewModel>()
 
         if (viewModel.requested.not()) {
@@ -53,7 +56,7 @@ object HomeScreen : AndroidScreen() {
             }
             else {
                 viewModel.homeCats.value!!.result.forEach() {
-                    CategorySwiper(category = it)
+                    CategorySwiper(category = it, navigator = navigator)
                 }
             }
         }

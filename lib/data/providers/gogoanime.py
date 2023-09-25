@@ -93,7 +93,7 @@ class GogoanimeProvider:
             for genre in list(filter(lambda x: "Genre:" in x.text.strip(), info_tags))[0].select("a"):
                 genres.append(GenreModel(
                     id=genre["href"].strip().split("/")[-1],
-                    name=genre.text.strip()
+                    name=genre.text.replace(",", "").strip()
                 ))
         except Exception:
             pass

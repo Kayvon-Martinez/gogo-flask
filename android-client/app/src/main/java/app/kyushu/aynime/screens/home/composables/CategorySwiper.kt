@@ -1,6 +1,7 @@
 package app.kyushu.aynime.screens.home.composables
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,23 +23,25 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.kyushu.aynime.data.remote.gogo_flask.responses.Item
 import app.kyushu.aynime.data.remote.gogo_flask.responses.Result
+import app.kyushu.aynime.screens.info.view.InfoScreen
+import cafe.adriel.voyager.navigator.Navigator
 import coil.compose.AsyncImage
 
 @Composable
-fun CategorySwiper(category: Result) {
+fun CategorySwiper(category: Result, navigator: Navigator) {
     Column{
         Text(text = category.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(4.dp))
         Spacer(modifier = Modifier.height(8.dp))
         LazyRow(content = {
             items(category.items.size) { item ->
-                AnimeCard(item = category.items[item])
+                AnimeCard(item = category.items[item], navigator = navigator)
             }
         })
     }
 }
 
 @Composable
-fun AnimeCard(item: Item) {
+fun AnimeCard(item: Item, navigator: Navigator) {
     Column(
         modifier = Modifier
             .width(120.dp)
@@ -47,6 +50,9 @@ fun AnimeCard(item: Item) {
         Box(
             contentAlignment = Alignment.TopEnd,
             modifier = Modifier
+                .clickable {
+                    navigator.push(InfoScreen(item))
+                }
                 .width(120.dp)
                 .aspectRatio((3 / 4.5).toFloat())
                 .clip(MaterialTheme.shapes.medium)
@@ -59,7 +65,7 @@ fun AnimeCard(item: Item) {
                     .fillMaxSize()
                     .clip(MaterialTheme.shapes.medium)
             )
-            Text(text = "${if (item.sub) "Sub" else "Dub"}${" • ${item.numOfEps} eps"}",
+            Text(text = "${if (item.sub) "Sub" else "Dub"}${if (item.numOfEps != null) " • ${item.numOfEps} eps" else ""}",
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier
                     .padding(5.dp)

@@ -35,6 +35,7 @@ import app.kyushu.aynime.screens.home.view.HomeScreen
 import app.kyushu.aynime.screens.search.view.SearchScreen
 import app.kyushu.aynime.screens.settings.view.SettingsScreen
 import app.kyushu.aynime.ui.theme.AynimeTheme
+import cafe.adriel.voyager.core.annotation.InternalVoyagerApi
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.CurrentScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -45,6 +46,12 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val screensToShowNavBarOrRailKeys: List<String> = listOf(
+            HomeScreen.key,
+            SearchScreen.key,
+            FavoritesScreen.key,
+            SettingsScreen.key
+        )
         setContent {
             AynimeTheme {
                 Navigator(
@@ -52,7 +59,8 @@ class MainActivity : ComponentActivity() {
                 ) { _ ->
                     Scaffold(
                         bottomBar = {
-                            if (LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE) {
+                            if (LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE
+                                && LocalNavigator.current!!.lastItem.key in screensToShowNavBarOrRailKeys) {
                                 NavigationBar(
                                     containerColor = MaterialTheme.colorScheme.surface,
                                     tonalElevation = 0.dp,
@@ -81,7 +89,8 @@ class MainActivity : ComponentActivity() {
                         }
                     ) { innerPadding ->
                         Row {
-                            if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                            if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+                                && LocalNavigator.current!!.lastItem.key in screensToShowNavBarOrRailKeys) {
                                 NavigationRail(
                                     containerColor = MaterialTheme.colorScheme.surface,
                                 ) {

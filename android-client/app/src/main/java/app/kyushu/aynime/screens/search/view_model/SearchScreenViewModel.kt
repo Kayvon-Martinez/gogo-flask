@@ -18,7 +18,10 @@ class SearchScreenViewModel @Inject constructor(
     var searchResults = mutableStateOf<SearchResults?>(null)
 
     fun search(query: String) {
-        if (query.isEmpty()) return
+        if (query.isEmpty()) {
+            searchResults.value = null
+            return
+        }
         viewModelScope.launch {
             repository.search(query).let {result ->
                 if (result is Resource.Success) {

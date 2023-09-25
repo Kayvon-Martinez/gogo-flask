@@ -34,7 +34,7 @@ fun InfoScreenHeader(imageUrl: String) {
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 250.dp)
+                .heightIn(max = 200.dp)
         )
         Box(
             modifier = Modifier

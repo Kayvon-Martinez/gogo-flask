@@ -127,7 +127,7 @@ class GogoanimeProvider:
         for episode in episodes_soup.select("li > a"):
             episodes.append(EpisodeModel(
                 id=episode["href"].strip().split("/")[-1],
-                number=int(episode.select_one(
+                number=float(episode.select_one(
                     "div.name").text.strip().replace("EP", "").strip()),
                 sub=episode.select_one("div.cate").text.strip() == "SUB",
             ))
